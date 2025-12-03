@@ -1417,6 +1417,10 @@
         "required": true,
         "types": [
           {
+            "type": "call_signature",
+            "named": true
+          },
+          {
             "type": "object_type",
             "named": true
           }

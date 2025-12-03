@@ -237,8 +237,17 @@
           "type": "FIELD",
           "name": "body",
           "content": {
-            "type": "SYMBOL",
-            "name": "object_type"
+            "type": "CHOICE",
+            "members": [
+              {
+                "type": "SYMBOL",
+                "name": "object_type"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "call_signature"
+              }
+            ]
           }
         }
       ]
@@ -1108,100 +1117,6 @@
             "type": "SYMBOL",
             "name": "statement"
           }
-        }
-      ]
-    },
-    "_for_header": {
-      "type": "SEQ",
-      "members": [
-        {
-          "type": "STRING",
-          "value": "("
-        },
-        {
-          "type": "CHOICE",
-          "members": [
-            {
-              "type": "FIELD",
-              "name": "left",
-              "content": {
-                "type": "CHOICE",
-                "members": [
-                  {
-                    "type": "SYMBOL",
-                    "name": "_lhs_expression"
-                  },
-                  {
-                    "type": "SYMBOL",
-                    "name": "parenthesized_expression"
-                  }
-                ]
-              }
-            },
-            {
-              "type": "SEQ",
-              "members": [
-                {
-                  "type": "FIELD",
-                  "name": "kind",
-                  "content": {
-                    "type": "CHOICE",
-                    "members": [
-                      {
-                        "type": "STRING",
-                        "value": "let"
-                      },
-                      {
-                        "type": "STRING",
-                        "value": "const"
-                      }
-                    ]
-                  }
-                },
-                {
-                  "type": "FIELD",
-                  "name": "left",
-                  "content": {
-                    "type": "CHOICE",
-                    "members": [
-                      {
-                        "type": "SYMBOL",
-                        "name": "identifier"
-                      },
-                      {
-                        "type": "SYMBOL",
-                        "name": "_destructuring_pattern"
-                      }
-                    ]
-                  }
-                },
-                {
-                  "type": "CHOICE",
-                  "members": [
-                    {
-                      "type": "SYMBOL",
-                      "name": "_automatic_semicolon"
-                    },
-                    {
-                      "type": "BLANK"
-                    }
-                  ]
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "type": "FIELD",
-          "name": "right",
-          "content": {
-            "type": "SYMBOL",
-            "name": "_expressions"
-          }
-        },
-        {
-          "type": "STRING",
-          "value": ")"
         }
       ]
     },
@@ -5288,23 +5203,7 @@
   "conflicts": [
     [
       "primary_expression",
-      "_property_name"
-    ],
-    [
-      "primary_expression",
-      "await_expression"
-    ],
-    [
-      "primary_expression",
-      "arrow_function"
-    ],
-    [
-      "primary_expression",
       "pattern"
-    ],
-    [
-      "primary_expression",
-      "_for_header"
     ],
     [
       "array",
@@ -5350,14 +5249,6 @@
       "pattern"
     ],
     [
-      "assignment_expression",
-      "object_assignment_pattern"
-    ],
-    [
-      "binary_expression",
-      "_initializer"
-    ],
-    [
       "call_expression",
       "binary_expression"
     ],
@@ -5398,12 +5289,19 @@
       "primary_type"
     ],
     [
-      "primary_type",
-      "type_parameter"
-    ],
-    [
       "primary_expression",
       "primary_type"
+    ],
+    [
+      "call_signature"
+    ],
+    [
+      "primary_type",
+      "generic_type"
+    ],
+    [
+      "type",
+      "array_type"
     ]
   ],
   "precedences": [

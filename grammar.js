@@ -19,10 +19,7 @@ module.exports = grammar({
     $.regex_pattern,
   ],
 
-  extras: ($) => [
-    $.comment,
-    /[\s\p{Zs}\uFEFF\u2028\u2029\u2060\u200B]/,
-  ],
+  extras: ($) => [$.comment, /[\s\p{Zs}\uFEFF\u2028\u2029\u2060\u200B]/],
 
   reserved: {
     global: ($) => [
@@ -110,11 +107,7 @@ module.exports = grammar({
   ],
 
   conflicts: ($) => [
-    [$.primary_expression, $._property_name],
-    [$.primary_expression, $.await_expression],
-    [$.primary_expression, $.arrow_function],
     [$.primary_expression, $.pattern],
-    [$.primary_expression, $._for_header],
     [$.array, $.array_pattern],
     [$.array, $.tuple_type],
     [$.array_pattern, $.tuple_type],
@@ -125,8 +118,6 @@ module.exports = grammar({
     [$.object, $.object_pattern, $.object_type],
     [$.object, $.object_pattern, $._property_name],
     [$.assignment_expression, $.pattern],
-    [$.assignment_expression, $.object_assignment_pattern],
-    [$.binary_expression, $._initializer],
     [$.call_expression, $.binary_expression],
     [$.call_expression, $.binary_expression, $.unary_expression],
     [$.call_expression, $.await_expression, $.binary_expression],
@@ -136,8 +127,10 @@ module.exports = grammar({
     [$.primary_expression, $.generic_type],
     [$.pattern, $.primary_type],
     [$.primary_expression, $.pattern, $.primary_type],
-    [$.primary_type, $.type_parameter],
     [$.primary_expression, $.primary_type],
+    [$.call_signature],
+    [$.primary_type, $.generic_type],
+    [$.type, $.array_type],
   ],
 
   word: ($) => $.identifier,
@@ -188,7 +181,7 @@ module.exports = grammar({
         "interface",
         field("name", $._type_identifier),
         field("type_parameters", optional($.type_parameters)),
-        field("body", $.object_type),
+        field("body", choice($.object_type, $.call_signature)),
       ),
 
     //
@@ -347,24 +340,6 @@ module.exports = grammar({
         field("increment", optional($._expressions)),
         ")",
         field("body", $.statement),
-      ),
-
-    _for_header: ($) =>
-      seq(
-        "(",
-        choice(
-          field("left", choice($._lhs_expression, $.parenthesized_expression)),
-          seq(
-            field("kind", choice("let", "const")),
-            field(
-              "left",
-              choice($.identifier, $._destructuring_pattern),
-            ),
-            optional($._automatic_semicolon),
-          ),
-        ),
-        field("right", $._expressions),
-        ")",
       ),
 
     try_statement: ($) =>
@@ -531,20 +506,18 @@ module.exports = grammar({
     arrow_function: ($) =>
       seq(
         optional("async"),
-        choice(
-          field("parameter", $.identifier),
-          $._call_signature,
-        ),
+        choice(field("parameter", $.identifier), $._call_signature),
         "=>",
         field("body", choice($.expression, $.statement_block)),
       ),
 
-    _call_signature: ($) => seq(
-      field("type_parameters", optional($.type_parameters)),
-      field("parameters", $.formal_parameters),
-      field("return_type", optional($.type_annotation))
-    ),
-    
+    _call_signature: ($) =>
+      seq(
+        field("type_parameters", optional($.type_parameters)),
+        field("parameters", $.formal_parameters),
+        field("return_type", optional($.type_annotation)),
+      ),
+
     _formal_parameter: ($) => choice($.pattern, $.assignment_pattern),
 
     call_expression: ($) =>
@@ -618,8 +591,21 @@ module.exports = grammar({
           field(
             "operator",
             choice(
-              "+=", "-=", "*=", "/=", "%=", "^=", "&=", "|=",
-              ">=>=", ">>>=", "<<=", "**=", "&&=", "||=", "??=",
+              "+=",
+              "-=",
+              "*=",
+              "/=",
+              "%=",
+              "^=",
+              "&=",
+              "|=",
+              ">=>=",
+              ">>>=",
+              "<<=",
+              "**=",
+              "&&=",
+              "||=",
+              "??=",
             ),
           ),
           field("right", $.expression),
@@ -794,27 +780,40 @@ module.exports = grammar({
       const exponentPart = seq(choice("e", "E"), signedInteger);
       const binaryLiteral = seq(choice("0b", "0B"), /[0-1](_?[0-1])*/);
       const octalLiteral = seq(choice("0o", "0O"), /[0-7](_?[0-7])*/);
-      
+
       const decimalIntegerLiteral = choice(
         "0",
-        seq(optional("0"), /[1-9]/, optional(seq(optional("_"), decimalDigits))),
+        seq(
+          optional("0"),
+          /[1-9]/,
+          optional(seq(optional("_"), decimalDigits)),
+        ),
       );
 
       const decimalLiteral = choice(
-        seq(decimalIntegerLiteral, ".", optional(decimalDigits), optional(exponentPart)),
+        seq(
+          decimalIntegerLiteral,
+          ".",
+          optional(decimalDigits),
+          optional(exponentPart),
+        ),
         seq(".", decimalDigits, optional(exponentPart)),
         seq(decimalIntegerLiteral, exponentPart),
         decimalDigits,
       );
 
-      return token(choice(hexLiteral, decimalLiteral, binaryLiteral, octalLiteral));
+      return token(
+        choice(hexLiteral, decimalLiteral, binaryLiteral, octalLiteral),
+      );
     },
 
     _identifier: ($) => $.identifier,
 
     identifier: (_) => {
-      const alpha = /[^\x00-\x1F\s\p{Zs}0-9:;`"'@#.,|^&<=>+\-*/\\%?!~()\[\]{}\uFEFF\u2060\u200B\u2028\u2029]|\\u[0-9a-fA-F]{4}|\\u\{[0-9a-fA-F]+\}/;
-      const alphanumeric = /[^\x00-\x1F\s\p{Zs}:;`"'@#.,|^&<=>+\-*/\\%?!~()\[\]{}\uFEFF\u2060\u200B\u2028\u2029]|\\u[0-9a-fA-F]{4}|\\u\{[0-9a-fA-F]+\}/;
+      const alpha =
+        /[^\x00-\x1F\s\p{Zs}0-9:;`"'@#.,|^&<=>+\-*/\\%?!~()\[\]{}\uFEFF\u2060\u200B\u2028\u2029]|\\u[0-9a-fA-F]{4}|\\u\{[0-9a-fA-F]+\}/;
+      const alphanumeric =
+        /[^\x00-\x1F\s\p{Zs}:;`"'@#.,|^&<=>+\-*/\\%?!~()\[\]{}\uFEFF\u2060\u200B\u2028\u2029]|\\u[0-9a-fA-F]{4}|\\u\{[0-9a-fA-F]+\}/;
       return token(seq(alpha, repeat(alphanumeric)));
     },
 
@@ -890,11 +889,20 @@ module.exports = grammar({
 
     predefined_type: (_) =>
       choice(
-        "u8", "u16", "u32", "u64",
-        "i8", "i16", "i32", "i64",
-        "f32", "f64",
-        "bool", "byte", "string",
-        "void"
+        "u8",
+        "u16",
+        "u32",
+        "u64",
+        "i8",
+        "i16",
+        "i32",
+        "i64",
+        "f32",
+        "f64",
+        "bool",
+        "byte",
+        "string",
+        "void",
       ),
 
     _type_identifier: ($) => alias($.identifier, $.type_identifier),
@@ -909,7 +917,8 @@ module.exports = grammar({
       ),
 
     type_arguments: ($) => seq("<", commaSep1($.type), optional(","), ">"),
-    type_parameters: ($) => seq("<", commaSep1($.type_parameter), optional(","), ">"),
+    type_parameters: ($) =>
+      seq("<", commaSep1($.type_parameter), optional(","), ">"),
 
     type_parameter: ($) =>
       seq(
@@ -962,8 +971,7 @@ module.exports = grammar({
 
     array_type: ($) => seq($.primary_type, "[", "]"),
 
-    tuple_type: ($) =>
-      seq("[", commaSep($.type), optional(","), "]"),
+    tuple_type: ($) => seq("[", commaSep($.type), optional(","), "]"),
 
     union_type: ($) => prec.left(seq(optional($.type), "|", $.type)),
     intersection_type: ($) => prec.left(seq(optional($.type), "&", $.type)),
@@ -978,14 +986,7 @@ module.exports = grammar({
         ),
       ),
 
-    literal_type: ($) =>
-      choice(
-        $.number,
-        $.string,
-        $.true,
-        $.false,
-        $.null,
-      ),
+    literal_type: ($) => choice($.number, $.string, $.true, $.false, $.null),
   },
 });
 
