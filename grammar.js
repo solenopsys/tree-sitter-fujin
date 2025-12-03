@@ -138,6 +138,7 @@ module.exports = grammar({
     [$.object_pattern, $._property_name],
     [$.property_signature, $.method_signature],
     [$.primary_expression, $.primary_type, $.generic_type],
+    [$.statement_block, $.object_type],
   ],
 
   word: ($) => $.identifier,
@@ -504,7 +505,9 @@ module.exports = grammar({
           optional("async"),
           "function",
           field("name", $.identifier),
-          $._call_signature,
+          field("type_parameters", optional($.type_parameters)),
+          field("parameters", $.formal_parameters),
+          field("return_type", optional($.type_annotation)),
           field("body", $.statement_block),
           optional($._automatic_semicolon),
         ),

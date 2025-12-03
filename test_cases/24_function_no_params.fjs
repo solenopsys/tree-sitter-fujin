@@ -1,0 +1,4 @@
+// Test 24: Function with no parameters
+function test(): void {
+  return;
+}
