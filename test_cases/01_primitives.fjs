@@ -1,0 +1,5 @@
+// Test 1: Simple primitives
+const x: i32 = 42;
+const y: f64 = 3.14;
+const flag: bool = true;
+const name: string = "test";

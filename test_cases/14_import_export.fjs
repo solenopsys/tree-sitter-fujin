@@ -1,0 +1,9 @@
+// Test 14: Import/Export
+import { User } from "./types";
+import * as utils from "./utils";
+
+export function createUser(name: string): User {
+  return { id: 1, name: name };
+}
+
+export default createUser;

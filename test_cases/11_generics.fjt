@@ -1,0 +1,9 @@
+// Test 11: Generics
+type Box<T> = {
+  value: T
+};
+
+interface Container<T> {
+  get(): T
+  set(value: T): void
+}

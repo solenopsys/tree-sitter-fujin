@@ -2096,11 +2096,115 @@
       "members": [
         {
           "type": "SYMBOL",
-          "name": "pattern"
+          "name": "required_parameter"
         },
         {
           "type": "SYMBOL",
-          "name": "assignment_pattern"
+          "name": "optional_parameter"
+        }
+      ]
+    },
+    "required_parameter": {
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "FIELD",
+          "name": "pattern",
+          "content": {
+            "type": "CHOICE",
+            "members": [
+              {
+                "type": "SYMBOL",
+                "name": "identifier"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "_destructuring_pattern"
+              }
+            ]
+          }
+        },
+        {
+          "type": "FIELD",
+          "name": "type",
+          "content": {
+            "type": "CHOICE",
+            "members": [
+              {
+                "type": "SYMBOL",
+                "name": "type_annotation"
+              },
+              {
+                "type": "BLANK"
+              }
+            ]
+          }
+        },
+        {
+          "type": "CHOICE",
+          "members": [
+            {
+              "type": "SYMBOL",
+              "name": "_initializer"
+            },
+            {
+              "type": "BLANK"
+            }
+          ]
+        }
+      ]
+    },
+    "optional_parameter": {
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "FIELD",
+          "name": "pattern",
+          "content": {
+            "type": "CHOICE",
+            "members": [
+              {
+                "type": "SYMBOL",
+                "name": "identifier"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "_destructuring_pattern"
+              }
+            ]
+          }
+        },
+        {
+          "type": "STRING",
+          "value": "?"
+        },
+        {
+          "type": "FIELD",
+          "name": "type",
+          "content": {
+            "type": "CHOICE",
+            "members": [
+              {
+                "type": "SYMBOL",
+                "name": "type_annotation"
+              },
+              {
+                "type": "BLANK"
+              }
+            ]
+          }
+        },
+        {
+          "type": "CHOICE",
+          "members": [
+            {
+              "type": "SYMBOL",
+              "name": "_initializer"
+            },
+            {
+              "type": "BLANK"
+            }
+          ]
         }
       ]
     },
@@ -3491,7 +3595,7 @@
         "value": 1,
         "content": {
           "type": "PATTERN",
-          "value": "[^\"\\\\r\\n]+"
+          "value": "[^\"\\\\\\r\\n]+"
         }
       }
     },
@@ -3502,7 +3606,7 @@
         "value": 1,
         "content": {
           "type": "PATTERN",
-          "value": "[^'\\\\r\\n]+"
+          "value": "[^'\\\\\\r\\n]+"
         }
       }
     },
@@ -4818,12 +4922,20 @@
                             "type": "CHOICE",
                             "members": [
                               {
-                                "type": "STRING",
-                                "value": ","
+                                "type": "CHOICE",
+                                "members": [
+                                  {
+                                    "type": "STRING",
+                                    "value": ","
+                                  },
+                                  {
+                                    "type": "SYMBOL",
+                                    "name": "_semicolon"
+                                  }
+                                ]
                               },
                               {
-                                "type": "SYMBOL",
-                                "name": "_semicolon"
+                                "type": "BLANK"
                               }
                             ]
                           },
@@ -5302,6 +5414,31 @@
     [
       "type",
       "array_type"
+    ],
+    [
+      "primary_expression",
+      "required_parameter"
+    ],
+    [
+      "assignment_expression",
+      "_initializer"
+    ],
+    [
+      "required_parameter",
+      "primary_type"
+    ],
+    [
+      "primary_expression",
+      "required_parameter",
+      "primary_type"
+    ],
+    [
+      "object_pattern",
+      "_property_name"
+    ],
+    [
+      "property_signature",
+      "method_signature"
     ]
   ],
   "precedences": [

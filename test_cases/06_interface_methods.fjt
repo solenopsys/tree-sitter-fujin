@@ -1,0 +1,5 @@
+// Test 6: Interface with methods
+interface UserService {
+  getUser(id: u64): Promise<User>
+  deleteUser(id: u64): Promise<bool>
+}

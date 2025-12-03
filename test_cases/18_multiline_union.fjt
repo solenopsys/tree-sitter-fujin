@@ -1,0 +1,6 @@
+// Test 18: Multiline type with union on last field
+type Task = {
+  id: u64
+  priority: u8
+  status: "pending" | "processing" | "done" | "failed"
+};

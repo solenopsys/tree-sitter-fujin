@@ -1,0 +1,6 @@
+// Test 15: Multiline type with multiple fields
+type User = {
+  id: u64
+  name: string
+  email: string
+};

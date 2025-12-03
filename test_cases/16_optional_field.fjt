@@ -1,0 +1,5 @@
+// Test 16: Optional field in type
+type User = {
+  id: u64
+  age?: u8
+};

@@ -1,0 +1,8 @@
+// Test 12: Array operations (minimal methods)
+function processArray(arr: i32[]): i32 {
+  const len = arr.length;
+  arr.push(42);
+  const last = arr.pop();
+  const slice = arr.slice(0, 2);
+  return len;
+}

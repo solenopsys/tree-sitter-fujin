@@ -1,0 +1,5 @@
+// Test 2: Simple type
+type Point = {
+  x: i32
+  y: i32
+};

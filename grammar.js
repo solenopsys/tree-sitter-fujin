@@ -131,6 +131,13 @@ module.exports = grammar({
     [$.call_signature],
     [$.primary_type, $.generic_type],
     [$.type, $.array_type],
+    [$.primary_expression, $.required_parameter],
+    [$.assignment_expression, $._initializer],
+    [$.required_parameter, $.primary_type],
+    [$.primary_expression, $.required_parameter, $.primary_type],
+    [$.object_pattern, $._property_name],
+    [$.property_signature, $.method_signature],
+    [$.primary_expression, $.primary_type, $.generic_type],
   ],
 
   word: ($) => $.identifier,
@@ -518,7 +525,23 @@ module.exports = grammar({
         field("return_type", optional($.type_annotation)),
       ),
 
-    _formal_parameter: ($) => choice($.pattern, $.assignment_pattern),
+    _formal_parameter: ($) =>
+      choice($.required_parameter, $.optional_parameter),
+
+    required_parameter: ($) =>
+      seq(
+        field("pattern", choice($.identifier, $._destructuring_pattern)),
+        field("type", optional($.type_annotation)),
+        optional($._initializer),
+      ),
+
+    optional_parameter: ($) =>
+      seq(
+        field("pattern", choice($.identifier, $._destructuring_pattern)),
+        "?",
+        field("type", optional($.type_annotation)),
+        optional($._initializer),
+      ),
 
     call_expression: ($) =>
       choice(
@@ -720,10 +743,10 @@ module.exports = grammar({
       ),
 
     unescaped_double_string_fragment: (_) =>
-      token.immediate(prec(1, /[^"\\r\n]+/)),
+      token.immediate(prec(1, /[^"\\\r\n]+/)),
 
     unescaped_single_string_fragment: (_) =>
-      token.immediate(prec(1, /[^'\\r\n]+/)),
+      token.immediate(prec(1, /[^'\\\r\n]+/)),
 
     escape_sequence: (_) =>
       token.immediate(
@@ -936,12 +959,21 @@ module.exports = grammar({
         optional(
           seq(
             optional(choice(",", ";")),
-            sepBy1(
-              choice(",", $._semicolon),
+            seq(
               choice(
                 $.property_signature,
                 $.call_signature,
                 $.method_signature,
+              ),
+              repeat(
+                seq(
+                  optional(choice(",", $._semicolon)),
+                  choice(
+                    $.property_signature,
+                    $.call_signature,
+                    $.method_signature,
+                  ),
+                ),
               ),
             ),
             optional(choice(",", $._semicolon)),

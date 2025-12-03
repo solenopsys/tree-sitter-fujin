@@ -1,0 +1,7 @@
+// Test 13: Destructuring
+function distance(point: Point): f64 {
+  const {x, y} = point;
+  return x + y;
+}
+
+const [a, b] = [1, 2];

@@ -1,0 +1,2 @@
+// Test 21: Union with 3 literals
+type Status = "pending" | "done" | "failed";
