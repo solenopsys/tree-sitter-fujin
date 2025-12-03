@@ -1,6 +1,19 @@
 {
   "name": "tree-sitter-fujin",
   "private": true,
+  "main": "bindings/node",
+  "types": "bindings/node",
+  "tree-sitter": [
+    {
+      "scope": "source.fujin",
+      "file-types": [
+        "fjs",
+        "fjt",
+        "fjx"
+      ],
+      "highlights": "queries/highlights.scm"
+    }
+  ],
   "scripts": {
     "build": "tree-sitter generate"
   },
