@@ -5439,6 +5439,11 @@
     [
       "property_signature",
       "method_signature"
+    ],
+    [
+      "primary_expression",
+      "primary_type",
+      "generic_type"
     ]
   ],
   "precedences": [
