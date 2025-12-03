@@ -1,6 +1,9 @@
 {
   "name": "tree-sitter-fujin",
   "private": true,
+  "scripts": {
+    "build": "tree-sitter generate"
+  },
   "devDependencies": {
     "@types/bun": "latest",
     "tree-sitter-cli": "^0.25.10"
