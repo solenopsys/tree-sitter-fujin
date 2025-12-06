@@ -12,18 +12,27 @@ failed_tests=()
 
 for file in test_cases/*.fjs test_cases/*.fjt; do
   [ -f "$file" ] || continue
-  
+
   basename=$(basename "$file")
   printf "%-40s " "$basename"
-  
-  if bun tree-sitter parse "$file" 2>&1 | grep -q "ERROR"; then
-    echo "❌ FAILED"
+
+  # Capture output and check both for ERROR in output and exit code
+  output=$(bun tree-sitter parse "$file" 2>&1) || parse_failed=1
+
+  if echo "$output" | grep -q "ERROR"; then
+    echo "❌ FAILED (parse error in AST)"
+    failed=$((failed + 1))
+    failed_tests+=("$basename")
+  elif [ "${parse_failed:-0}" = "1" ]; then
+    echo "❌ FAILED (parser crashed)"
     failed=$((failed + 1))
     failed_tests+=("$basename")
   else
     echo "✅ PASSED"
     passed=$((passed + 1))
   fi
+
+  unset parse_failed
 done
 
 echo ""
