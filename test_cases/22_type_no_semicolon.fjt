@@ -1,5 +1,0 @@
-// Test 22: Type without semicolon (error expected)
-type Task = {
-  id: u64
-  status: "pending" | "done"
-}

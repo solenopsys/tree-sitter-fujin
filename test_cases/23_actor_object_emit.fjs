@@ -1,0 +1,15 @@
+// Test 23: Actor emitting object
+type UserMsg = { id: u64 };
+type User = { id: u64, name: string };
+type UserOut = { type: "user", value: User };
+
+actor getUser(msg: UserMsg) {
+  const out: UserOut = {
+    type: "user",
+    value: {
+      id: msg.id,
+      name: "test"
+    }
+  };
+  emit out;
+}

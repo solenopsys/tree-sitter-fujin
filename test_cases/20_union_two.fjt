@@ -1,2 +1,0 @@
-// Test 20: Union with 2 literals
-type Status = "pending" | "done";

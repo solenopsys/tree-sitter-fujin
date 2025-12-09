@@ -1,5 +1,13 @@
-// Test 1: Simple primitives
-const x: i32 = 42;
-const y: f64 = 3.14;
-const flag: bool = true;
-const name: string = "test";
+// Test 1: Simple primitives inside actor
+type PrimitivesMsg = {};
+type PrimitivesOut = { type: "primitives", x: i32, y: f64, flag: bool, name: string };
+
+actor primitives(msg: PrimitivesMsg) {
+  const x: i32 = 42;
+  const y: f64 = 3.14;
+  const flag: bool = true;
+  const name: string = "test";
+
+  const out: PrimitivesOut = { type: "primitives", x, y, flag, name };
+  emit out;
+}

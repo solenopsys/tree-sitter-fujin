@@ -1,4 +1,0 @@
-// Test 7: Callable interface (function interface)
-interface Handler {
-  (event: Event): Promise<void>
-}

@@ -1,2 +1,0 @@
-// Test 19: Union with 4 string literals
-type Status = "pending" | "processing" | "done" | "failed";

@@ -1,8 +1,12 @@
-// Test 9: For loop (only allowed loop)
-function sum(arr: i32[]): i32 {
+// Test 9: For loop inside actor
+type SumMsg = { arr: i32[] };
+type SumOut = { type: "sum", total: i32 };
+
+actor sum(msg: SumMsg) {
   let total: i32 = 0;
-  for (let i: i32 = 0; i < arr.length; i++) {
-    total += arr[i];
+  for (let i: i32 = 0; i < msg.arr.length; i++) {
+    total += msg.arr[i];
   }
-  return total;
+  const out: SumOut = { type: "sum", total };
+  emit out;
 }

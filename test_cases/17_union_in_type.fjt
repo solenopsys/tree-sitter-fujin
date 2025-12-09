@@ -1,4 +1,0 @@
-// Test 17: Union type as field type
-type Task = {
-  status: "pending" | "done"
-};

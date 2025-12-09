@@ -1,7 +1,0 @@
-// Test 23: Function returning object
-function getUser(id: u64): User {
-  return {
-    id: id,
-    name: "test"
-  };
-}

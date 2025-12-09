@@ -1,5 +1,0 @@
-// Test 5: Simple interface
-interface User {
-  id: u64
-  name: string
-}

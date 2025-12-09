@@ -1,3 +1,10 @@
-// Test 10: Union types
+// Union and union-in-field cases
 type Status = "pending" | "running" | "done";
 type Value = i32 | string | null;
+
+type Task = {
+  id: u64
+  status: "pending" | "processing" | "done" | "failed"
+};
+
+type State = "cold" | "warm" | "hot";
