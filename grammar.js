@@ -1,6 +1,7 @@
 /**
  * @file Fujin grammar for tree-sitter
  * Based on JavaScript and TypeScript grammars, adapted for Fujin's strict subset.
+ * Actors instead of functions, emit for messaging.
  */
 
 /// <reference types="tree-sitter-cli/dsl" />
@@ -15,6 +16,7 @@ module.exports = grammar({
 
   reserved: {
     global: ($) => [
+      "actor",
       "break",
       "case",
       "catch",
@@ -22,22 +24,21 @@ module.exports = grammar({
       "continue",
       "default",
       "else",
+      "emit",
       "export",
       "false",
       "finally",
       "for",
-      "function",
       "if",
       "import",
       "let",
       "null",
-      "return",
+      "protocol",
       "switch",
       "throw",
       "true",
       "try",
       "type",
-      "interface",
       "from",
       "as",
     ],
@@ -53,7 +54,7 @@ module.exports = grammar({
   ],
 
   inline: ($) => [
-    $._call_signature,
+    $._actor_signature,
     $._formal_parameter,
     $._expressions,
     $._semicolon,
@@ -74,7 +75,6 @@ module.exports = grammar({
       "binary_equality",
       "logical_and",
       "logical_or",
-      $.arrow_function,
     ],
     ["assign", $.primary_expression],
     ["member", "call", $.expression],
@@ -92,8 +92,6 @@ module.exports = grammar({
     [$.primary_expression, $.required_parameter],
     [$.array, $.array_pattern],
     [$.object, $.object_pattern],
-    [$.property_signature, $.method_signature],
-    [$.call_signature],
     [$.assignment_expression, $._initializer],
     [$.primary_type, $.generic_type],
     [$.type, $.array_type],
@@ -112,10 +110,10 @@ module.exports = grammar({
 
     declaration: ($) =>
       choice(
-        $.function_declaration,
+        $.actor_declaration,
         $.lexical_declaration,
         $.type_alias_declaration,
-        $.interface_declaration,
+        $.protocol_declaration,
       ),
 
     lexical_declaration: ($) =>
@@ -142,12 +140,35 @@ module.exports = grammar({
         $._semicolon,
       ),
 
-    interface_declaration: ($) =>
+    protocol_declaration: ($) =>
       seq(
-        "interface",
+        "protocol",
         field("name", $._type_identifier),
-        field("type_parameters", optional($.type_parameters)),
-        field("body", choice($.object_type, $.call_signature)),
+        field("body", $.protocol_body),
+      ),
+
+    protocol_body: ($) =>
+      seq(
+        "{",
+        optional(
+          seq(
+            optional(choice(",", ";")),
+            seq(
+              $.protocol_method,
+              repeat(
+                seq(optional(choice(",", $._semicolon)), $.protocol_method),
+              ),
+            ),
+            optional(choice(",", $._semicolon)),
+          ),
+        ),
+        "}",
+      ),
+
+    protocol_method: ($) =>
+      seq(
+        field("name", $._property_name),
+        field("parameters", $.formal_parameters),
       ),
 
     //
@@ -247,7 +268,7 @@ module.exports = grammar({
         $.try_statement,
         $.break_statement,
         $.continue_statement,
-        $.return_statement,
+        $.emit_statement,
         $.throw_statement,
         $.empty_statement,
       ),
@@ -335,8 +356,9 @@ module.exports = grammar({
 
     continue_statement: ($) => seq("continue", $._semicolon),
 
-    return_statement: ($) =>
-      seq("return", optional($._expressions), $._semicolon),
+    // emit statement for sending messages
+    emit_statement: ($) =>
+      seq("emit", field("message", $.expression), $._semicolon),
 
     throw_statement: ($) => seq("throw", $._expressions, $._semicolon),
 
@@ -371,8 +393,6 @@ module.exports = grammar({
         $.null,
         $.object,
         $.array,
-        $.function_expression,
-        $.arrow_function,
         $.call_expression,
       ),
 
@@ -383,7 +403,14 @@ module.exports = grammar({
         "object",
         seq(
           "{",
-          commaSep(optional(choice($.pair, alias($.identifier, $.shorthand_property_identifier)))),
+          commaSep(
+            optional(
+              choice(
+                $.pair,
+                alias($.identifier, $.shorthand_property_identifier),
+              ),
+            ),
+          ),
           "}",
         ),
       ),
@@ -395,56 +422,38 @@ module.exports = grammar({
           "{",
           commaSep(
             optional(
-              choice($.pair_pattern, alias($.identifier, $.shorthand_property_identifier_pattern)),
+              choice(
+                $.pair_pattern,
+                alias($.identifier, $.shorthand_property_identifier_pattern),
+              ),
             ),
           ),
           "}",
         ),
       ),
 
-    array: ($) =>
-      seq("[", commaSep(optional($.expression)), "]"),
+    array: ($) => seq("[", commaSep(optional($.expression)), "]"),
 
-    array_pattern: ($) =>
-      seq("[", commaSep(optional($.pattern)), "]"),
+    array_pattern: ($) => seq("[", commaSep(optional($.pattern)), "]"),
 
-    function_expression: ($) =>
-      prec(
-        "literal",
-        seq(
-          "function",
-          field("name", optional($.identifier)),
-          $._call_signature,
-          field("body", $.statement_block),
-        ),
-      ),
-
-    function_declaration: ($) =>
+    // Actor declaration - no return value
+    actor_declaration: ($) =>
       prec.right(
         "declaration",
         seq(
-          "function",
+          "actor",
           field("name", $.identifier),
           field("type_parameters", optional($.type_parameters)),
           field("parameters", $.formal_parameters),
-          field("return_type", optional($.type_annotation)),
           field("body", $.statement_block),
           optional($._automatic_semicolon),
         ),
       ),
 
-    arrow_function: ($) =>
-      seq(
-        choice(field("parameter", $.identifier), $._call_signature),
-        "=>",
-        field("body", choice($.expression, $.statement_block)),
-      ),
-
-    _call_signature: ($) =>
+    _actor_signature: ($) =>
       seq(
         field("type_parameters", optional($.type_parameters)),
         field("parameters", $.formal_parameters),
-        field("return_type", optional($.type_annotation)),
       ),
 
     _formal_parameter: ($) => $.required_parameter,
@@ -698,11 +707,7 @@ module.exports = grammar({
       seq(field("key", $._property_name), ":", field("value", $.pattern)),
 
     _property_name: ($) =>
-      choice(
-        alias($.identifier, $.property_identifier),
-        $.string,
-        $.number,
-      ),
+      choice(alias($.identifier, $.property_identifier), $.string, $.number),
 
     _semicolon: ($) => choice($._automatic_semicolon, ";"),
 
@@ -713,7 +718,7 @@ module.exports = grammar({
     type_annotation: ($) => seq(":", $.type),
 
     type: ($) =>
-      choice($.primary_type, $.union_type, $.function_type, $.array_type),
+      choice($.primary_type, $.union_type, $.actor_type, $.array_type),
 
     primary_type: ($) =>
       choice(
@@ -739,6 +744,7 @@ module.exports = grammar({
         "bool",
         "byte",
         "string",
+        "number",
         "void",
       ),
 
@@ -766,20 +772,9 @@ module.exports = grammar({
           seq(
             optional(choice(",", ";")),
             seq(
-              choice(
-                $.property_signature,
-                $.call_signature,
-                $.method_signature,
-              ),
+              $.property_signature,
               repeat(
-                seq(
-                  optional(choice(",", $._semicolon)),
-                  choice(
-                    $.property_signature,
-                    $.call_signature,
-                    $.method_signature,
-                  ),
-                ),
+                seq(optional(choice(",", $._semicolon)), $.property_signature),
               ),
             ),
             optional(choice(",", $._semicolon)),
@@ -795,22 +790,18 @@ module.exports = grammar({
         field("type", optional($.type_annotation)),
       ),
 
-    call_signature: ($) => $._call_signature,
-
-    method_signature: ($) =>
-      seq(field("name", $._property_name), $._call_signature),
-
     array_type: ($) => seq($.primary_type, "[", "]"),
 
     union_type: ($) => prec.left(seq(optional($.type), "|", $.type)),
 
-    function_type: ($) =>
+    // Actor type - takes parameters, no return
+    actor_type: ($) =>
       prec.left(
         seq(
           field("type_parameters", optional($.type_parameters)),
           field("parameters", $.formal_parameters),
           "=>",
-          field("return_type", $.type),
+          "void",
         ),
       ),
 
