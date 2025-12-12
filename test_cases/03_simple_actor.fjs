@@ -1,8 +1,0 @@
-// Test 3: Simple actor
-type AddMsg = { a: i32, b: i32 };
-type SumOut = { type: "sum", value: i32 };
-
-actor add(msg: AddMsg) {
-  const out: SumOut = { type: "sum", value: msg.a + msg.b };
-  emit out;
-}

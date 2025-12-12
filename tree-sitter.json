@@ -1,0 +1,10 @@
+{
+  "name": "fujin",
+  "scope": "source.fujin",
+  "file-types": ["fjs", "fjt", "fjx"],
+  "highlights": "queries/highlights.scm",
+  "metadata": {
+    "version": "0.1.0",
+    "license": "MIT"
+  }
+}

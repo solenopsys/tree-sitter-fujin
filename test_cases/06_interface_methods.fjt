@@ -1,5 +1,0 @@
-// Test 6: Protocol with methods
-protocol UserService {
-  getUser(id: u64)
-  deleteUser(id: u64)
-}

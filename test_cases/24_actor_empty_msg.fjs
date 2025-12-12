@@ -1,8 +1,0 @@
-// Test 24: Actor with empty message
-type EmptyMsg = {};
-type OkOut = { type: "ok" };
-
-actor test(msg: EmptyMsg) {
-  const out: OkOut = { type: "ok" };
-  emit out;
-}

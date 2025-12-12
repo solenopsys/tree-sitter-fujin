@@ -15,7 +15,7 @@
     }
   ],
   "scripts": {
-    "build": "tree-sitter generate"
+    "bld": "tree-sitter generate"
   },
   "devDependencies": {
     "@types/bun": "latest",
