@@ -10,7 +10,7 @@ passed=0
 failed=0
 failed_tests=()
 
-for file in test_cases/*.fjs test_cases/*.fjt; do
+for file in ../lang/test_cases/*.fjs test_cases/*.fjt; do
   [ -f "$file" ] || continue
 
   basename=$(basename "$file")

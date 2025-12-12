@@ -17,6 +17,7 @@ module.exports = grammar({
   reserved: {
     global: ($) => [
       "actor",
+      "action",
       "break",
       "case",
       "catch",
@@ -33,7 +34,6 @@ module.exports = grammar({
       "import",
       "let",
       "null",
-      "protocol",
       "switch",
       "throw",
       "true",
@@ -80,7 +80,7 @@ module.exports = grammar({
     ["member", "call", $.expression],
     ["declaration", "literal"],
     [$.primary_expression, $.statement_block, "object"],
-    [$.import_statement, $.import],
+    [$.import_statement],
     [$.export_statement, $.primary_expression],
     [$.lexical_declaration, $.primary_expression],
     [$.type, $.primary_type],
@@ -89,12 +89,8 @@ module.exports = grammar({
 
   conflicts: ($) => [
     [$.primary_expression, $.pattern],
-    [$.primary_expression, $.required_parameter],
     [$.array, $.array_pattern],
     [$.object, $.object_pattern],
-    [$.assignment_expression, $._initializer],
-    [$.primary_type, $.generic_type],
-    [$.type, $.array_type],
   ],
 
   word: ($) => $.identifier,
@@ -113,7 +109,6 @@ module.exports = grammar({
         $.actor_declaration,
         $.lexical_declaration,
         $.type_alias_declaration,
-        $.protocol_declaration,
       ),
 
     lexical_declaration: ($) =>
@@ -133,49 +128,25 @@ module.exports = grammar({
     type_alias_declaration: ($) =>
       seq(
         "type",
-        field("name", $._type_identifier),
+        field("name", choice($._type_identifier, $.annotated_type_name)),
         field("type_parameters", optional($.type_parameters)),
         "=",
         field("value", $.type),
         $._semicolon,
       ),
 
-    protocol_declaration: ($) =>
+    annotated_type_name: ($) =>
       seq(
-        "protocol",
-        field("name", $._type_identifier),
-        field("body", $.protocol_body),
-      ),
-
-    protocol_body: ($) =>
-      seq(
-        "{",
-        optional(
-          seq(
-            optional(choice(",", ";")),
-            seq(
-              $.protocol_method,
-              repeat(
-                seq(optional(choice(",", $._semicolon)), $.protocol_method),
-              ),
-            ),
-            optional(choice(",", $._semicolon)),
-          ),
-        ),
-        "}",
-      ),
-
-    protocol_method: ($) =>
-      seq(
-        field("name", $._property_name),
-        field("parameters", $.formal_parameters),
+        "@",
+        field("annotation", $.identifier),
+        "(",
+        field("annotation_target", $._type_identifier),
+        ")",
       ),
 
     //
     // Modules
     //
-
-    import: (_) => token("import"),
 
     import_statement: ($) =>
       seq(
@@ -394,6 +365,8 @@ module.exports = grammar({
         $.object,
         $.array,
         $.call_expression,
+        $.action_identifier,
+        $.fjsx_element,
       ),
 
     parenthesized_expression: ($) => seq("(", $._expressions, ")"),
@@ -469,10 +442,7 @@ module.exports = grammar({
       choice(
         prec(
           "call",
-          seq(
-            field("function", choice($.expression, $.import)),
-            field("arguments", $.arguments),
-          ),
+          seq(field("function", $.expression), field("arguments", $.arguments)),
         ),
       ),
 
@@ -480,7 +450,7 @@ module.exports = grammar({
       prec(
         "member",
         seq(
-          field("object", choice($.expression, $.primary_expression, $.import)),
+          field("object", choice($.expression, $.primary_expression)),
           ".",
           field("property", alias($.identifier, $.property_identifier)),
         ),
@@ -561,7 +531,7 @@ module.exports = grammar({
       prec.left(
         "unary_void",
         seq(
-          field("operator", choice("!", "~", "-", "+")),
+          field("operator", choice("!", "-", "+")),
           field("argument", $.expression),
         ),
       ),
@@ -681,6 +651,15 @@ module.exports = grammar({
       return token(seq(alpha, repeat(alphanumeric)));
     },
 
+    // Reference to actor (e.g., @click)
+    action_identifier: (_) =>
+      token(
+        seq(
+          "@",
+          /[^\x00-\x1F\s\p{Zs}:;`"'@#.,|^&<=>+\-*/\\%?!~()\[\]{}\uFEFF\u2060\u200B\u2028\u2029]+/,
+        ),
+      ),
+
     true: (_) => "true",
     false: (_) => "false",
     null: (_) => "null",
@@ -707,7 +686,12 @@ module.exports = grammar({
       seq(field("key", $._property_name), ":", field("value", $.pattern)),
 
     _property_name: ($) =>
-      choice(alias($.identifier, $.property_identifier), $.string, $.number),
+      choice(
+        alias($.identifier, $.property_identifier),
+        $.action_identifier,
+        $.string,
+        $.number,
+      ),
 
     _semicolon: ($) => choice($._automatic_semicolon, ";"),
 
@@ -744,6 +728,7 @@ module.exports = grammar({
         "bool",
         "byte",
         "string",
+        "action",
         "number",
         "void",
       ),
@@ -806,6 +791,54 @@ module.exports = grammar({
       ),
 
     literal_type: ($) => choice($.number, $.string, $.true, $.false, $.null),
+
+    //
+    // FJX (lightweight JSX-like syntax)
+    //
+    fjsx_element: ($) =>
+      choice($.fjsx_self_closing_element, $.fjsx_standard_element),
+
+    fjsx_standard_element: ($) =>
+      seq(
+        "<",
+        field("name", $._fjsx_tag_name),
+        repeat($.fjsx_attribute),
+        ">",
+        optional($.fjsx_children),
+        "</",
+        field("closing_name", $._fjsx_tag_name),
+        ">",
+      ),
+
+    fjsx_self_closing_element: ($) =>
+      seq("<", field("name", $._fjsx_tag_name), repeat($.fjsx_attribute), "/>"),
+
+    _fjsx_tag_name: ($) => choice($.identifier, $.action_identifier),
+
+    fjsx_attribute: ($) =>
+      seq(
+        field("name", choice($.identifier, $.action_identifier)),
+        "=",
+        field(
+          "value",
+          choice(
+            $.string,
+            $.number,
+            $.true,
+            $.false,
+            $.null,
+            $.action_identifier,
+            seq("{", $.expression, "}"),
+          ),
+        ),
+      ),
+
+    fjsx_children: ($) =>
+      repeat1(choice($.fjsx_element, $.fjsx_text, $.fjsx_expression_child)),
+
+    fjsx_text: (_) => token.immediate(/[^{<]+/),
+
+    fjsx_expression_child: ($) => seq("{", $.expression, "}"),
   },
 });
 
