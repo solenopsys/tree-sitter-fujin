@@ -91,6 +91,7 @@ module.exports = grammar({
     [$.primary_expression, $.pattern],
     [$.array, $.array_pattern],
     [$.object, $.object_pattern],
+    [$.primary_expression, $.member_expression],
   ],
 
   word: ($) => $.identifier,
@@ -366,6 +367,7 @@ module.exports = grammar({
         $.array,
         $.call_expression,
         $.action_identifier,
+        $.meta_property,
         $.fjsx_element,
       ),
 
@@ -380,6 +382,7 @@ module.exports = grammar({
             optional(
               choice(
                 $.pair,
+                $.spread_element,
                 alias($.identifier, $.shorthand_property_identifier),
               ),
             ),
@@ -387,6 +390,8 @@ module.exports = grammar({
           "}",
         ),
       ),
+
+    spread_element: ($) => seq("...", $.expression),
 
     object_pattern: ($) =>
       prec(
@@ -415,9 +420,12 @@ module.exports = grammar({
         "declaration",
         seq(
           "actor",
-          field("name", $.identifier),
+          field(
+            "name",
+            choice($.action_identifier, sepBy1("|", $.action_identifier)),
+          ),
           field("type_parameters", optional($.type_parameters)),
-          field("parameters", $.formal_parameters),
+          field("parameters", optional($.formal_parameters)),
           field("body", $.statement_block),
           optional($._automatic_semicolon),
         ),
@@ -450,11 +458,16 @@ module.exports = grammar({
       prec(
         "member",
         seq(
-          field("object", choice($.expression, $.primary_expression)),
+          field(
+            "object",
+            choice($.expression, $.primary_expression, $.meta_property),
+          ),
           ".",
           field("property", alias($.identifier, $.property_identifier)),
         ),
       ),
+
+    meta_property: ($) => "@",
 
     subscript_expression: ($) =>
       prec.right(
@@ -688,9 +701,39 @@ module.exports = grammar({
     _property_name: ($) =>
       choice(
         alias($.identifier, $.property_identifier),
+        alias($.reserved_identifier, $.property_identifier),
         $.action_identifier,
         $.string,
         $.number,
+      ),
+
+    reserved_identifier: (_) =>
+      choice(
+        "type",
+        "actor",
+        "emit",
+        "import",
+        "export",
+        "const",
+        "let",
+        "if",
+        "else",
+        "for",
+        "switch",
+        "case",
+        "default",
+        "break",
+        "continue",
+        "try",
+        "catch",
+        "finally",
+        "throw",
+        "true",
+        "false",
+        "null",
+        "action",
+        "from",
+        "as",
       ),
 
     _semicolon: ($) => choice($._automatic_semicolon, ";"),
