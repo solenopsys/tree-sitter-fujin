@@ -6,9 +6,7 @@
 
 ; String literals
 (string) @string
-(template_string) @string
 (escape_sequence) @string.escape
-(template_substitution) @embedded
 
 ; Numbers
 (number) @number
@@ -25,15 +23,10 @@
 ; Type declarations
 (type_alias_declaration
   name: (type_identifier) @type.definition)
-(interface_declaration
-  name: (type_identifier) @type.definition)
 
-; Function declarations
-(function_declaration
-  name: (identifier) @function.definition)
-(function_expression
-  name: (identifier) @function)
-(arrow_function) @function
+; Actor declarations
+(actor_declaration
+  name: (action_identifier) @function.definition)
 
 ; Function calls
 (call_expression
@@ -41,10 +34,6 @@
 (call_expression
   function: (member_expression
     property: (property_identifier) @function.method))
-
-; Method signatures
-(method_signature
-  name: (property_identifier) @function.method)
 
 ; Properties
 (property_signature
@@ -55,76 +44,17 @@
 ; Parameters
 (required_parameter
   pattern: (identifier) @variable.parameter)
-(optional_parameter
-  pattern: (identifier) @variable.parameter)
 
 ; Variables
 (identifier) @variable
 
-; Operators
-"=" @operator
-"==" @operator
-"===" @operator
-"!=" @operator
-"!==" @operator
-">" @operator
-">=" @operator
-"<" @operator
-"<=" @operator
-"+" @operator
-"-" @operator
-"*" @operator
-"/" @operator
-"%" @operator
-"**" @operator
-"++" @operator
-"--" @operator
-"&&" @operator
-"||" @operator
-"!" @operator
-"??" @operator
-"?." @operator
-"&" @operator
-"|" @operator
-"^" @operator
-"~" @operator
-"<<" @operator
-">>" @operator
-">>>" @operator
-"+=" @operator
-"-=" @operator
-"*=" @operator
-"/=" @operator
-"%=" @operator
-"**=" @operator
-"<<=" @operator
-">>=" @operator
-">>>=" @operator
-"&=" @operator
-"|=" @operator
-"^=" @operator
-"&&=" @operator
-"||=" @operator
-"??=" @operator
-
-; Punctuation
-"(" @punctuation.bracket
-")" @punctuation.bracket
-"[" @punctuation.bracket
-"]" @punctuation.bracket
-"{" @punctuation.bracket
-"}" @punctuation.bracket
-";" @punctuation.delimiter
-"," @punctuation.delimiter
-"." @punctuation.delimiter
-":" @punctuation.delimiter
-"?" @punctuation.special
-"=>" @punctuation.special
+; Action identifiers
+(action_identifier) @function
 
 ; Keywords
+"actor" @keyword
 "as" @keyword
-"async" @keyword
-"await" @keyword
+"assert" @keyword
 "break" @keyword
 "case" @keyword
 "catch" @keyword
@@ -132,20 +62,15 @@
 "continue" @keyword
 "default" @keyword
 "else" @keyword
+"emit" @keyword
 "export" @keyword
-"extends" @keyword
 "finally" @keyword
 "for" @keyword
 "from" @keyword
-"function" @keyword.function
 "if" @keyword
 "import" @keyword
-"interface" @keyword
 "let" @keyword
-"readonly" @keyword
-"return" @keyword
 "switch" @keyword
 "throw" @keyword
 "try" @keyword
 "type" @keyword
-"void" @keyword

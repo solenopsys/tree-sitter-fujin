@@ -18,6 +18,7 @@ module.exports = grammar({
     global: ($) => [
       "actor",
       "action",
+      "assert",
       "break",
       "case",
       "catch",
@@ -241,6 +242,7 @@ module.exports = grammar({
         $.break_statement,
         $.continue_statement,
         $.emit_statement,
+        $.assert_statement,
         $.throw_statement,
         $.empty_statement,
       ),
@@ -331,6 +333,15 @@ module.exports = grammar({
     // emit statement for sending messages
     emit_statement: ($) =>
       seq("emit", field("message", $.expression), $._semicolon),
+
+    // assert statement for runtime checks
+    assert_statement: ($) =>
+      seq(
+        "assert",
+        field("condition", $.expression),
+        optional(seq(",", field("message", $.expression))),
+        $._semicolon,
+      ),
 
     throw_statement: ($) => seq("throw", $._expressions, $._semicolon),
 
@@ -711,6 +722,7 @@ module.exports = grammar({
       choice(
         "type",
         "actor",
+        "assert",
         "emit",
         "import",
         "export",
